@@ -7,7 +7,8 @@
 #include "lift.h"
 #include "astar5x5.h"
 #include "PathRunner.h"
-#include "arduino_secrets.h" 
+#include "arduino_secrets.h"
+#include "BoxGetter.h"
 
 // =================================================================
 // 1. 와이파이 정보
@@ -23,6 +24,7 @@ WiFiServer server(80);
 Lift       robotLift;           // 리프트 제어기
 gridMove   mover;               // 저수준 모터 제어기
 PathRunner runner(mover, 150);  // 경로 실행기 (칸 이동 후 150ms 대기)
+BoxGetter  boxGetter(mover, robotLift);
 
 // --- 로봇의 현재 상태 ---
 int currentX = 0; // 로봇의 현재 X 좌표 (0-4)
@@ -70,6 +72,7 @@ void setup() {
 void loop() {
   runner.update();
   robotLift.update();
+  boxGetter.update();
 
   // --- 경로 실행 완료 감지 ---
   static bool pathWasActive = false;
@@ -96,7 +99,7 @@ void loop() {
       Serial.print("\nReceived Command: ");
       Serial.println(command);
 
-      if (runner.isFinished()) {
+      if (runner.isFinished() && !boxGetter.isBusy()) {
         if (command.startsWith("move_")) {
           String params = command.substring(5);
           int separator_index = params.indexOf('_');
@@ -119,6 +122,10 @@ void loop() {
           Serial.println("Action: Lift Down command received.");
           robotLift.downFor(2000);
           isLiftUpState = false;
+        }
+        else if (command == "box") {
+          Serial.println("Action: 'box' command received. Starting BoxGetter sequence.");
+          boxGetter.startGetBox();
         }
         // ... (다른 명령어들도 여기에 추가) ...
       }

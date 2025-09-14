@@ -19,8 +19,8 @@ public:
 
     BoxGetter(gridMove& mover, Lift& lift);
 
-    void startGetBox();  // 시퀀스 시작
-    void update();       // 매 loop()마다 호출
+    void startGetBox();
+    void update();
 
     bool isBusy() const;
     bool isFinished() const;
